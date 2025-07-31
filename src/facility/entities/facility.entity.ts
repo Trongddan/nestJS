@@ -1,7 +1,9 @@
+import { Table } from 'src/table/entities/table.entity';
 import {
   Column,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -15,6 +17,9 @@ export class Facility {
 
   @Column({ length: 200 })
   description: string;
+
+  @OneToMany(() => Table, (table) => table.facility)
+  tables: Table[];
 
   @DeleteDateColumn({ nullable: true })
   deleted_at: Date | null;

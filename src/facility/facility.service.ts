@@ -7,13 +7,15 @@ import { CreateFacilityDto } from './dto/create-facility.dto';
 import { UpdateFacilityDto } from './dto/update-facility.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Facility } from './entities/facility.entity';
-import { Repository } from 'typeorm';
+import { Repository, Table } from 'typeorm';
 
 @Injectable()
 export class FacilityService {
   constructor(
     @InjectRepository(Facility)
     private readonly facilityRepo: Repository<Facility>,
+    @InjectRepository(Table)
+    private readonly tableRepo: Repository<Table>,
   ) {}
 
   async create(createFacilityDto: CreateFacilityDto) {
@@ -41,20 +43,25 @@ export class FacilityService {
   }
 
   async remove(id: number) {
-    const existingFacility = await this.facilityRepo.findOne({
-      where: { id },
-      // relations: ['tables'],
-    });
-    if (!existingFacility) {
-      throw new NotFoundException('Cơ sở không tồn tại');
+    try {
+      const existingFacility = await this.facilityRepo.findOne({
+        where: { id },
+        relations: ['tables'],
+      });
+      if (!existingFacility) {
+        throw new NotFoundException('Cơ sở không tồn tại');
+      }
+      // console.log(existingFacility.tables);
+
+      // for (const table of existingFacility.tables) {
+      //   await this.tableRepo.softDelete(table.id);
+      // }
+
+      return this.facilityRepo.softDelete(id).then(() => {
+        return { message: 'Cơ sở đã được xóa thành công' };
+      });
+    } catch (error) {
+      console.log(error);
     }
-
-    // for (const table of existingFacility.tables) {
-    //   await this.tableRepo.softDelete(table.id);
-    // }
-
-    return this.facilityRepo.softDelete(id).then(() => {
-      return { message: 'Cơ sở đã được xóa thành công' };
-    });
   }
 }
